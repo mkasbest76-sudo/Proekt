@@ -1,0 +1,180 @@
+PROGRAM STAT
+VAR
+Smena: BOOL:=FALSE; (*Флаг начала новой смены*)
+todTime : TOD;
+iHour : DINT;
+
+
+Time_Start: 	ARRAY[1..100] OF DT; (*Время включения печи*)
+Time_Stop: 		ARRAY[1..100] OF DT; (*Время выключения печи*)
+Time_Work:		TIME; (*Время работы всего*)
+Time_Rud:		TIME; (*Время работы под загрузкой*)
+Time_No_Rud:	TIME; (*Время работы вхолостую без руды*)
+Time_No_Gaz:	TIME; (*Время работы без подачи газа*)
+Time_Vl_Norm:	TIME; (*Время работы со влажностью в пределах уставок*)
+Time_Vl_Up:		TIME; (*Время работы с повышенной вложностью руды на выходе*)
+Time_Vl_Dwn:	TIME; (*Время работы с пониженной вложностью руды на выходе*)
+Q_gaz:			ARRAY[1..100] OF REAL; (*Расход газа*)
+Vl_all_5:		ARRAY[1..100] OF REAL; (*Средняя влажность на выходе*)
+Vl_all_22:		ARRAY[1..100] OF REAL; (*Средняя влажность на входе*)
+Rud_all:		ARRAY[1..100] OF REAL; (*Расход руды*)
+W_all:			ARRAY[1..100] OF REAL; (*Удельная*)
+
+W_Time_Work:	ARRAY[1..100] OF STRING; (*Время работы всего*)
+W_Time_Rud:		ARRAY[1..100] OF STRING; (*Время работы под загрузкой*)
+W_Time_No_Rud:	ARRAY[1..100] OF STRING; (*Время работы вхолостую без руды*)
+W_Time_No_Gaz:	ARRAY[1..100] OF STRING; (*Время работы без подачи газа*)
+W_Time_Vl_Norm:	ARRAY[1..100] OF STRING; (*Время работы со влажностью в пределах уставок*)
+W_Time_Vl_Up:	ARRAY[1..100] OF STRING; (*Время работы с повышенной вложностью руды на выходе*)
+W_Time_Vl_Dwn:	ARRAY[1..100] OF STRING; (*Время работы с пониженной вложностью руды на выходе*)
+
+Rud:		ARRAY[1..100] OF REAL; (*% Времени работы под загрузкой*)
+No_Rud:		ARRAY[1..100] OF REAL; (*% Времени работы вхолостую без руды*)
+No_Gaz:		ARRAY[1..100] OF REAL; (*% Времени работы без газа*)
+Vl_Norm:	ARRAY[1..100] OF REAL; (*% Времени работы со влажностью в пределах уставок*)
+Vl_Up:		ARRAY[1..100] OF REAL; (*% Времени работы с повышенной вложностью руды на выходе*)
+Vl_Dwn:		ARRAY[1..100] OF REAL; (*% Времени работы с пониженной вложностью руды на выходе*)
+
+TotalHours : DINT;
+Minutes : DINT;
+Seconds : DINT;
+i: INT :=0; (*порядковый номер записи*)
+m: INT :=0; (*количество непустых записей*)
+ON: BOOL :=FALSE; (*Печь включена*)
+Time_Back:		TIME; (*Время предыдущего цикла*)
+Time_i:		TIME; (*Время цикла*)
+
+END_VAR
+
+todTime := DT_TO_TOD(TargetVars.stRtc.dtDateAndTime); // Получим 15:30:00
+iHour := TOD_TO_DINT(todTime) / 3600000;
+IF ON AND (iHour=0 OR iHour=8 OR iHour=16) AND TIME_TO_REAL(Time_Work)>3600000 THEN Smena:=TRUE; ELSE Smena:=FALSE; END_IF
+
+IF ON=FALSE AND DIFF.ON=TRUE THEN ON:=TRUE; m:=0; 
+SysMem.SysMemMove (pDest:= ADR(Time_Start[2]), pSrc:= ADR(Time_Start[1]), udiCount:= SIZEOF(Time_Start[1])*99);
+SysMem.SysMemMove (pDest:= ADR(Time_Stop[2]), pSrc:= ADR(Time_Stop[1]), udiCount:= SIZEOF(Time_Stop[1])*99);
+SysMem.SysMemMove (pDest:= ADR(W_Time_Work[2]), pSrc:= ADR(W_Time_Work[1]), udiCount:= SIZEOF(W_Time_Work[1])*99);
+SysMem.SysMemMove (pDest:= ADR(W_Time_Rud[2]), pSrc:= ADR(W_Time_Rud[1]), udiCount:= SIZEOF(W_Time_Rud[1])*99);
+SysMem.SysMemMove (pDest:= ADR(W_Time_No_Rud[2]), pSrc:= ADR(W_Time_No_Rud[1]), udiCount:= SIZEOF(W_Time_No_Rud[1])*99);
+SysMem.SysMemMove (pDest:= ADR(W_Time_No_Gaz[2]), pSrc:= ADR(W_Time_No_Gaz[1]), udiCount:= SIZEOF(W_Time_No_Gaz[1])*99);
+SysMem.SysMemMove (pDest:= ADR(W_Time_Vl_Norm[2]), pSrc:= ADR(W_Time_Vl_Norm[1]), udiCount:= SIZEOF(W_Time_Vl_Norm[1])*99);
+SysMem.SysMemMove (pDest:= ADR(W_Time_Vl_Up[2]), pSrc:= ADR(W_Time_Vl_Up[1]), udiCount:= SIZEOF(W_Time_Vl_Up[1])*99);
+SysMem.SysMemMove (pDest:= ADR(W_Time_Vl_Dwn[2]), pSrc:= ADR(W_Time_Vl_Dwn[1]), udiCount:= SIZEOF(W_Time_Vl_Dwn[1])*99);
+SysMem.SysMemMove (pDest:= ADR(Q_gaz[2]), pSrc:= ADR(Q_gaz[1]), udiCount:= SIZEOF(Q_gaz[1])*99);
+SysMem.SysMemMove (pDest:= ADR(Vl_all_5[2]), pSrc:= ADR(Vl_all_5[1]), udiCount:= SIZEOF(Vl_all_5[1])*99);
+SysMem.SysMemMove (pDest:= ADR(Rud_all[2]), pSrc:= ADR(Rud_all[1]), udiCount:= SIZEOF(Rud_all[1])*99);
+SysMem.SysMemMove (pDest:= ADR(W_all[2]), pSrc:= ADR(W_all[1]), udiCount:= SIZEOF(W_all[1])*99);
+SysMem.SysMemMove (pDest:= ADR(Vl_all_22[2]), pSrc:= ADR(Vl_all_22[1]), udiCount:= SIZEOF(Vl_all_22[1])*99);
+SysMem.SysMemMove (pDest:= ADR(Rud[2]), pSrc:= ADR(Rud[1]), udiCount:= SIZEOF(Rud[1])*99);
+SysMem.SysMemMove (pDest:= ADR(No_Rud[2]), pSrc:= ADR(No_Rud[1]), udiCount:= SIZEOF(No_Rud[1])*99);
+SysMem.SysMemMove (pDest:= ADR(No_Gaz[2]), pSrc:= ADR(No_Gaz[1]), udiCount:= SIZEOF(No_Gaz[1])*99);
+SysMem.SysMemMove (pDest:= ADR(Vl_Norm[2]), pSrc:= ADR(Vl_Norm[1]), udiCount:= SIZEOF(Vl_Norm[1])*99);
+SysMem.SysMemMove (pDest:= ADR(Vl_Up[2]), pSrc:= ADR(Vl_Up[1]), udiCount:= SIZEOF(Vl_Up[1])*99);
+SysMem.SysMemMove (pDest:= ADR(Vl_Dwn[2]), pSrc:= ADR(Vl_Dwn[1]), udiCount:= SIZEOF(Vl_Dwn[1])*99);
+
+Time_Start[1]  := TargetVars.stRtc.dtDateAndTime;
+FOR i:=1 TO 99 DO IF Time_Start[100-i]>DT#1970-1-1-0:0:0 THEN m:=m+1; END_IF END_FOR
+ 	Time_Stop[1]   := DT#1970-1-1-0:0:0;
+ 	Time_Work      := T#0S;
+ 	Time_Rud       := T#0S;
+ 	Time_No_Rud    := T#0S;
+ 	Time_No_Gaz    := T#0S;
+ 	Time_Vl_Norm   := T#0S;
+ 	Time_Vl_Up     := T#0S;
+ 	Time_Vl_Dwn    := T#0S;
+	Q_gaz[1]:=0;
+	Vl_all_5[1]:=0;
+	Vl_all_22[1]:=0;
+	Q_gaz[1]:=0;
+	Rud_all[1]:=0;
+	W_all[1]:=0;
+	Rud[1]:=0;		
+	No_Rud[1]:=0;  
+	No_Gaz[1]:=0;  
+	Vl_Norm[1]:=0;	
+	Vl_Up[1]:=0;	
+	Vl_Dwn[1]:=0;	
+	Time_Back:=TIME();
+END_IF	
+IF (ON=TRUE AND DIFF.ON=FALSE) OR Smena=TRUE THEN ON:=FALSE; Time_Stop[1]:= TargetVars.stRtc.dtDateAndTime; Time_Work:= Time_Stop[1]-Time_Start[1]; END_IF
+IF ON=TRUE THEN Time_i:= TIME()-Time_Back; IF Time_i>T#20S OR Time_i<T#0S THEN Time_i:=T#5S; END_IF
+	Time_Work:= Time_Work+Time_i;
+	
+
+	IF PLC_PRG.No_Rud=TRUE THEN Time_No_Rud:=Time_No_Rud+Time_i;
+	ELSIF PLC_PRG.B_Gor=TRUE THEN Time_No_Gaz:=Time_No_Gaz+Time_i;
+ 	ELSE Time_Rud:=Time_Rud+Time_i; 
+	IF TIME_TO_REAL(Time_Rud)+TIME_TO_REAL(Time_i)>0 THEN Vl_all_5[1]:=(Vl_all_5[1]*TIME_TO_REAL(Time_Rud)+POU_V.Vl_rud_out*TIME_TO_REAL(Time_i))/(TIME_TO_REAL(Time_Rud)+TIME_TO_REAL(Time_i)); Vl_all_22[1]:=(Vl_all_22[1]*TIME_TO_REAL(Time_Rud)+POU_V.Vl_rud_in*TIME_TO_REAL(Time_i))/(TIME_TO_REAL(Time_Rud)+TIME_TO_REAL(Time_i));END_IF
+	IF POU_V.Vl_rud_out/100<PLC_PRG.UVl_dwn THEN  Time_Vl_Dwn:=Time_Vl_Dwn+Time_i;
+	ELSIF POU_V.Vl_rud_out/100>PLC_PRG.UVl_up THEN  Time_Vl_Up:=Time_Vl_Up+Time_i;
+	ELSE Time_Vl_Norm:=Time_Vl_Norm+Time_i; 
+	END_IF END_IF END_IF
+
+Time_Back:=TIME();
+Q_gaz[1]:=Q_gaz[1]+POU_V.Q_gaz*TIME_TO_REAL(Time_i)/3600000;
+Rud_all[1]:=Rud_all[1]+POU_V.M_rud*TIME_TO_REAL(Time_i)/3600000000;
+IF Rud_all[1]>0 THEN W_all[1]:=Q_gaz[1]/Rud_all[1]; ELSE W_all[1]:=0; END_IF
+IF Time_Rud>T#0S 	 AND Time_Work>T#0S THEN Rud[1]	:= TIME_TO_REAL (Time_Rud)/TIME_TO_REAL (Time_Work)*100;		ELSE Rud[1]		:=0; END_IF  
+IF Time_No_Rud>T#0S  AND Time_Work>T#0S THEN No_Rud[1]:= TIME_TO_REAL (Time_No_Rud)/TIME_TO_REAL (Time_Work)*100;	ELSE No_Rud[1]	:=0; END_IF
+IF Time_No_Gaz>T#0S  AND Time_Work>T#0S THEN No_Gaz[1]:= TIME_TO_REAL (Time_No_Gaz)/TIME_TO_REAL (Time_Work)*100;	ELSE No_Gaz[1]	:=0; END_IF
+IF Time_Vl_Norm>T#0S AND Time_Rud>T#0S 	   THEN Vl_Norm[1]:= TIME_TO_REAL (Time_Vl_Norm)/TIME_TO_REAL (Time_Rud)*100;	ELSE Vl_Norm[1]	:=0; END_IF
+IF Time_Vl_Up>T#0S   AND Time_Rud>T#0S	   THEN Vl_Up[1]	:= TIME_TO_REAL (Time_Vl_Up)/TIME_TO_REAL (Time_Rud)*100;	ELSE Vl_Up[1]	:=0; END_IF 
+IF Time_Vl_Dwn>T#0S  AND Time_Rud>T#0S	   THEN Vl_Dwn[1]	:= TIME_TO_REAL (Time_Vl_Dwn)/TIME_TO_REAL (Time_Rud)*100;	ELSE Vl_Dwn[1]	:=0; END_IF
+
+TotalHours := TIME_TO_DINT(Time_Work) / 3600000;
+Minutes := (TIME_TO_DINT(Time_Work) / 60000) MOD 60;
+Seconds := (TIME_TO_DINT(Time_Work) / 1000) MOD 60;
+W_Time_Work[1]:= CONCAT(DINT_TO_STRING(TotalHours),':');
+W_Time_Work[1]:= CONCAT(W_Time_Work[1], RIGHT(CONCAT('0', DINT_TO_STRING(Minutes)), 2));
+W_Time_Work[1]:= CONCAT(W_Time_Work[1], ':');
+W_Time_Work[1]:= CONCAT(W_Time_Work[1], RIGHT(CONCAT('0', DINT_TO_STRING(Seconds)), 2));
+
+TotalHours := TIME_TO_DINT(Time_Rud) / 3600000;
+Minutes := (TIME_TO_DINT(Time_Rud) / 60000) MOD 60;
+Seconds := (TIME_TO_DINT(Time_Rud) / 1000) MOD 60;
+W_Time_Rud[1]:= CONCAT(DINT_TO_STRING(TotalHours),':');
+W_Time_Rud[1]:= CONCAT(W_Time_Rud[1], RIGHT(CONCAT('0', DINT_TO_STRING(Minutes)), 2));
+W_Time_Rud[1]:= CONCAT(W_Time_Rud[1], ':');
+W_Time_Rud[1]:= CONCAT(W_Time_Rud[1], RIGHT(CONCAT('0', DINT_TO_STRING(Seconds)), 2));
+
+TotalHours := TIME_TO_DINT(Time_No_Rud) / 3600000;
+Minutes := (TIME_TO_DINT(Time_No_Rud) / 60000) MOD 60;
+Seconds := (TIME_TO_DINT(Time_No_Rud) / 1000) MOD 60;
+W_Time_No_Rud[1]:= CONCAT(DINT_TO_STRING(TotalHours),':');
+W_Time_No_Rud[1]:= CONCAT(W_Time_No_Rud[1], RIGHT(CONCAT('0', DINT_TO_STRING(Minutes)), 2));
+W_Time_No_Rud[1]:= CONCAT(W_Time_No_Rud[1], ':');
+W_Time_No_Rud[1]:= CONCAT(W_Time_No_Rud[1], RIGHT(CONCAT('0', DINT_TO_STRING(Seconds)), 2));
+
+TotalHours := TIME_TO_DINT(Time_No_Gaz) / 3600000;
+Minutes := (TIME_TO_DINT(Time_No_Gaz) / 60000) MOD 60;
+Seconds := (TIME_TO_DINT(Time_No_Gaz) / 1000) MOD 60;
+W_Time_No_Gaz[1]:= CONCAT(DINT_TO_STRING(TotalHours),':');
+W_Time_No_Gaz[1]:= CONCAT(W_Time_No_Gaz[1], RIGHT(CONCAT('0', DINT_TO_STRING(Minutes)), 2));
+W_Time_No_Gaz[1]:= CONCAT(W_Time_No_Gaz[1], ':');
+W_Time_No_Gaz[1]:= CONCAT(W_Time_No_Gaz[1], RIGHT(CONCAT('0', DINT_TO_STRING(Seconds)), 2));
+
+TotalHours := TIME_TO_DINT(Time_Vl_Norm) / 3600000;
+Minutes := (TIME_TO_DINT(Time_Vl_Norm) / 60000) MOD 60;
+Seconds := (TIME_TO_DINT(Time_Vl_Norm) / 1000) MOD 60;
+W_Time_Vl_Norm[1]:= CONCAT(DINT_TO_STRING(TotalHours),':');
+W_Time_Vl_Norm[1]:= CONCAT(W_Time_Vl_Norm[1], RIGHT(CONCAT('0', DINT_TO_STRING(Minutes)), 2));
+W_Time_Vl_Norm[1]:= CONCAT(W_Time_Vl_Norm[1], ':');
+W_Time_Vl_Norm[1]:= CONCAT(W_Time_Vl_Norm[1], RIGHT(CONCAT('0', DINT_TO_STRING(Seconds)), 2));
+
+TotalHours := TIME_TO_DINT(Time_Vl_Up) / 3600000;
+Minutes := (TIME_TO_DINT(Time_Vl_Up) / 60000) MOD 60;
+Seconds := (TIME_TO_DINT(Time_Vl_Up) / 1000) MOD 60;
+W_Time_Vl_Up[1]:= CONCAT(DINT_TO_STRING(TotalHours),':');
+W_Time_Vl_Up[1]:= CONCAT(W_Time_Vl_Up[1], RIGHT(CONCAT('0', DINT_TO_STRING(Minutes)), 2));
+W_Time_Vl_Up[1]:= CONCAT(W_Time_Vl_Up[1], ':');
+W_Time_Vl_Up[1]:= CONCAT(W_Time_Vl_Up[1], RIGHT(CONCAT('0', DINT_TO_STRING(Seconds)), 2));
+
+TotalHours := TIME_TO_DINT(Time_Vl_Dwn) / 3600000;
+Minutes := (TIME_TO_DINT(Time_Vl_Dwn) / 60000) MOD 60;
+Seconds := (TIME_TO_DINT(Time_Vl_Dwn) / 1000) MOD 60;
+W_Time_Vl_Dwn[1]:= CONCAT(DINT_TO_STRING(TotalHours),':');
+W_Time_Vl_Dwn[1]:= CONCAT(W_Time_Vl_Dwn[1], RIGHT(CONCAT('0', DINT_TO_STRING(Minutes)), 2));
+W_Time_Vl_Dwn[1]:= CONCAT(W_Time_Vl_Dwn[1], ':');
+W_Time_Vl_Dwn[1]:= CONCAT(W_Time_Vl_Dwn[1], RIGHT(CONCAT('0', DINT_TO_STRING(Seconds)), 2));
+
+

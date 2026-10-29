@@ -1,0 +1,396 @@
+PROGRAM DIFF
+VAR
+Timer: TON; (*Таймер проверки изменения параметров*)
+Timer_Stab: TON; (*Таймер проверки стабилизации параметров*)
+Text_Hist: ARRAY[1..1000] OF WSTRING (65);	(*Текст события в истории*)
+Time_Hist: ARRAY[1..1000] OF DT;	(*Время события в истории*)
+
+DT_VL: DT; (*Дата изменения флага параметра*)
+Time_VL: TIME; (*Время изменения флага параметра*)
+VL_m: BOOL; (*Флаг что параметр изменился*)
+
+DT_GAZ: DT; (*Дата изменения флага параметра*)
+Time_GAZ: TIME; (*Время изменения флага параметра*)
+GAZ_m: BOOL; (*Флаг что параметр изменился*)
+
+DT_PTop: DT; (*Дата изменения флага параметра*)
+Time_PTop: TIME; (*Время изменения флага параметра*)
+PTop_m: BOOL; (*Флаг что параметр изменился*)
+
+DT_TTop: DT; (*Дата изменения флага параметра*)
+Time_TTop: TIME; (*Время изменения флага параметра*)
+TTop_m: BOOL; (*Флаг что параметр изменился*)
+
+DT_PVent: DT; (*Дата изменения флага параметра*)
+Time_PVent: TIME; (*Время изменения флага параметра*)
+PVent_m: BOOL; (*Флаг что параметр изменился*)
+
+DT_PDym: DT; (*Дата изменения флага параметра*)
+Time_PDym: TIME; (*Время изменения флага параметра*)
+PDym_m: BOOL; (*Флаг что параметр изменился*)
+
+DT_Pit: DT; (*Дата изменения флага параметра*)
+Time_Pit: TIME; (*Время изменения флага параметра*)
+Pit_m: BOOL; (*Флаг что параметр изменился*)
+
+i: INT :=1; (*порядковый номер записи*)
+m: INT :=0; (*количество непустых записей*)
+m_dif: BOOL:=TRUE; (*Флаг необходимости подсчета количества записей*)
+	ON      : BOOL;(*Печь включена*)
+	ON_1    : BOOL;(*Печь была включена*)
+	Vent    : BOOL;(*Вентилятор включен*)
+	Vent_1  : BOOL;(*Вентилятор был включен*)
+	Dym     : BOOL;(*Дымосос включен*)
+	Dym_1   : BOOL;(*Дымосос был включен*)
+	Pit     : BOOL;(*Питатель включен*)
+	Pit_1   : BOOL;(*Питатель был включен*)
+	Gor     : BOOL;(*Горелка включена*)
+	Gor_1   : BOOL;(*Горелка была включена*)
+	Stab    : BOOL;(*Параметры печи стабилизировались*)
+	TEMP_UP : BOOL;(*Печь разогревается*)
+	TEMP_UP_1: BOOL;(*Печь разогревалась*)
+	TEMP_DWN: BOOL;(*Печь остывает*)
+	TEMP_DWN_1: BOOL;(*Печь остывала*)
+	GAZ_UP  : BOOL;(*Расход газа увеличен*)
+	GAZ_DWN : BOOL;(*Расход газа снижен*)
+	VENT_UP : BOOL;(*Давление вентилятора увеличилось*)
+	VENT_DWN: BOOL;(*Давление вентилятора снизилось*)
+	DYM_UP  : BOOL;(*Разряжение дымососа увеличилось*)
+	DYM_DWN : BOOL;(*Разряжение дымососа снизилось*)  
+	PIT_UP  : BOOL;(*Загрузка питателя увеличилась*)
+	PIT_DWN : BOOL;(*Загрузка питателя снизилась*)  
+	ZAG_OFF  : BOOL;(*Печь работает в холостую*)
+	GAZ_OFF  : BOOL;(*Печь работает без газа*)
+	VL_DIF  : BOOL;(*Влажность больше-меньше*)                    
+	PGaz_DIF  : BOOL;(*Давление газа перед горелкой больше-меньше*) 
+	PTop_DIF  : BOOL;(*Разряжение в топке больше-меньше*)           
+	TTop_DIF  : BOOL;(*Температура в топке больше-меньше*)          
+	PVent_DIF  : BOOL;(*Давление воздуха в коллекторе больше-меньше*)
+	PDym_DIF  : BOOL;(*Разряжение дымососа больше-меньше*)          
+	Pit_DIF  : BOOL;(*Загрузка питателя больше-меньше*)          
+	AUTO  : BOOL;   (*Автокоррекция включена*)
+
+
+	
+	
+	//T1_Stab: REAL; (*Стабилизированная температура байпаса*)
+	//Prev_1_T1: REAL;
+	//Prev_2_T1: REAL;
+	//UP_T1: BOOL; (*Температура байпаса растет*)
+	//DWN_T1: BOOL;(*Температура байпаса падает*)
+
+	//T3_Stab: REAL; (*Стабилизированная температура до циклона 1*)
+	//Prev_1_T3: REAL;
+	//Prev_2_T3: REAL;
+	//UP_T3: BOOL; (*Температура до циклона 1 растет*)
+	//DWN_T3: BOOL;(*Температура до циклона 1 падает*)
+
+	//T4_Stab: REAL; (*Стабилизированная температура до циклона 2*)
+	//Prev_1_T4: REAL;
+	//Prev_2_T4: REAL;
+	//UP_T4: BOOL; (*Температура до циклона 2 растет*)
+	//DWN_T4: BOOL;(*Температура до циклона 2 падает*)
+
+	//T5_Stab: REAL; (*Стабилизированная температура отм. +12*)
+	//Prev_1_T5: REAL;
+	//Prev_2_T5: REAL;
+	//UP_T5: BOOL; (*Температура отм. +12 растет*)
+	//DWN_T5: BOOL;(*Температура отм. +12 падает*)
+
+	//T6_Stab: REAL; (*Стабилизированная температура отм. +16*)
+	//Prev_1_T6: REAL;
+	//Prev_2_T6: REAL;
+	//UP_T6: BOOL; (*Температура отм. +16 растет*)
+	//DWN_T6: BOOL;(*Температура отм. +16 падает*)
+
+	//T7_Stab: REAL; (*Стабилизированная температура отм. +21*)
+	//Prev_1_T7: REAL;
+	//Prev_2_T7: REAL;
+	//UP_T7: BOOL; (*Температура отм. +21 растет*)
+	//DWN_T7: BOOL;(*Температура отм. +21 падает*)
+
+	//T8_Stab: REAL; (*Стабилизированная температура отм. +9*)
+	//Prev_1_T8: REAL;
+	//Prev_2_T8: REAL;
+	//UP_T8: BOOL; (*Температура отм. +9 растет*)
+	//DWN_T8: BOOL;(*Температура отм. +9 падает*)
+
+	T13_Stab: REAL; (*Стабилизированная температура в топке ТХА*)
+	Prev_1_T13: REAL;
+	Prev_2_T13: REAL;
+	UP_T13: BOOL; (*Температура в топке ТХА растет*)
+	DWN_T13: BOOL;(*Температура в топке ТХА падает*)
+	
+	T14_Stab: REAL; (*Стабилизированная температура перед шахтой ТХА*)
+	Prev_1_T14: REAL;
+	Prev_2_T14: REAL;
+	UP_T14: BOOL; (*Температура перед шахтой ТХА растет*)
+	DWN_T14: BOOL;(*Температура перед шахтой ТХА падает*)
+
+	//T15_Stab: REAL; (*Стабилизированная температура отм. +21 ТХА*)
+	//Prev_1_T15: REAL;
+	//Prev_2_T15: REAL;
+	//UP_T15: BOOL; (*Температура отм. +21 ТХА растет*)
+	//DWN_T15: BOOL;(*Температура отм. +21 ТХА падает*)
+
+	//D1_Stab: REAL; (*Стабилизированное разряжение в топке*)
+	//Prev_1_D1: REAL;
+	//Prev_2_D1: REAL;
+	//UP_D1: BOOL; (*Разряжение в топке растет*)
+	//DWN_D1: BOOL;(*Разряжение в топке падает*)
+
+	D2_Stab: REAL; (*Стабилизированное давление газа на горелку*)
+	Prev_1_D2: REAL;
+	Prev_2_D2: REAL;
+	UP_D2: BOOL; (*Давление газа на горелку растет*)
+	DWN_D2: BOOL;(*Давление газа на горелку падает*)
+
+	//D3_Stab: REAL; (*Стабилизированное давление воздуха перед горелкорй (аг)*)
+	//Prev_1_D3: REAL;
+	//Prev_2_D3: REAL;
+	//UP_D3: BOOL; (*Давление воздуха перед горелкорй (аг) растет*)
+	//DWN_D3: BOOL;(*Давление воздуха перед горелкорй (аг) падает*)
+
+	//D4_Stab: REAL; (*Стабилизированное давление на разбавление*)
+	//Prev_1_D4: REAL;
+	//Prev_2_D4: REAL;
+	//UP_D4: BOOL; (*Давление на разбавление растет*)
+	//DWN_D4: BOOL;(*Давление на разбавление падает*)
+
+	D5_Stab: REAL; (*Стабилизированное давление после вентилятора*)
+	Prev_1_D5: REAL;
+	Prev_2_D5: REAL;
+	UP_D5: BOOL; (*Давление после вентилятора растет*)
+	DWN_D5: BOOL;(*Давление после вентилятора падает*)
+
+	D6_Stab: REAL; (*Стабилизированное разряжение после дымососа*)
+	Prev_1_D6: REAL;
+	Prev_2_D6: REAL;
+	UP_D6: BOOL; (*Разряжение после дымососа растет*)
+	DWN_D6: BOOL;(*Разряжение после дымососа падает*)
+	
+	//D8_Stab: REAL; (*Стабилизированное разряжение после циклона*)
+	//Prev_1_D8: REAL;
+	//Prev_2_D8: REAL;
+	//UP_D8: BOOL; (*Разряжение после циклона растет*)
+	//DWN_D8: BOOL;(*Разряжение после циклона падает*)
+	
+	//D9_Stab: REAL; (*Стабилизированное разряжение в топке (аг)*)
+	//Prev_1_D9: REAL;
+	//Prev_2_D9: REAL;
+	//UP_D9: BOOL; (*Разряжение в топке (аг) растет*)
+	//DWN_D9: BOOL;(*Разряжение в топке (аг) падает*)
+
+	//D10_Stab: REAL; (*Стабилизированное давление воздуха перед горелдкой (аг)*)
+	//Prev_1_D10: REAL;
+	//Prev_2_D10: REAL;
+	//UP_D10: BOOL; (*Давление воздуха перед горелдкой (аг) растет*)
+	//DWN_D10: BOOL;(*Давление воздуха перед горелдкой (аг) падает*)
+
+	PIT_Stab: REAL; (*Стабилизированная загрузка питателя*)
+	Prev_1_PIT: REAL;
+	Prev_2_PIT: REAL;
+	UP_PIT: BOOL; (*Загрузка питателя растет*)
+	DWN_PIT: BOOL;(*Загрузка питателя падает*)
+
+	Q_gaz_Stab: REAL; (*Стабилизированный расход газа*)
+	Prev_1_Q_gaz: REAL;
+	Prev_2_Q_gaz: REAL;
+	UP_Q_gaz: BOOL; (*Расход газа растет*)
+	DWN_Q_gaz: BOOL;(*Расход газа падает*)
+	
+END_VAR
+
+Timer (IN := TRUE, PT:= T#20S);
+IF Timer.Q THEN
+
+	// Проверка роста температуры в топке ТХА
+IF T13_Stab=0 AND PLC_PRG.T13<>0 THEN T13_Stab:=PLC_PRG.T13; END_IF
+IF PLC_PRG.T13>0 AND T13_Stab<>0 THEN IF ABS(1-Prev_2_T13/PLC_PRG.T13)<0.005 AND ABS(1-Prev_1_T13/PLC_PRG.T13)<0.005 AND PLC_PRG.T13/T13_Stab>1.02 THEN UP_T13:=TRUE; T13_Stab:=PLC_PRG.T13; END_IF END_IF
+IF PLC_PRG.T13>0 AND T13_Stab<>0 THEN IF ABS(1-Prev_2_T13/PLC_PRG.T13)<0.005 AND ABS(1-Prev_1_T13/PLC_PRG.T13)<0.005 AND PLC_PRG.T13/T13_Stab<0.98 THEN DWN_T13 :=TRUE;  T13_Stab:=PLC_PRG.T13; END_IF END_IF
+    Prev_2_T13 := Prev_1_T13;
+    Prev_1_T13 := PLC_PRG.T13;
+
+	// Проверка роста температуры в топке ТХА
+IF T14_Stab=0 AND PLC_PRG.T14<>0 THEN T14_Stab:=PLC_PRG.T14; END_IF
+IF PLC_PRG.T14>0 AND T14_Stab<>0 THEN IF ABS(1-Prev_2_T14/PLC_PRG.T14)<0.005 AND ABS(1-Prev_1_T14/PLC_PRG.T14)<0.005 AND PLC_PRG.T14/T14_Stab>1.02 THEN UP_T14:=TRUE; T14_Stab:=PLC_PRG.T14; END_IF END_IF
+IF PLC_PRG.T14>0 AND T14_Stab<>0 THEN IF ABS(1-Prev_2_T14/PLC_PRG.T14)<0.005 AND ABS(1-Prev_1_T14/PLC_PRG.T14)<0.005 AND PLC_PRG.T14/T14_Stab<0.98 THEN DWN_T14 :=TRUE;  T14_Stab:=PLC_PRG.T14; END_IF END_IF
+    Prev_2_T14 := Prev_1_T14;
+    Prev_1_T14 := PLC_PRG.T14;
+
+	// Проверка роста давления газа на горелку
+IF D2_Stab=0 AND PLC_PRG.D2<>0 THEN D2_Stab:=PLC_PRG.D2; END_IF
+IF PLC_PRG.D2>0 AND D2_Stab<>0 THEN IF ABS(1-Prev_2_D2/PLC_PRG.D2)<0.01 AND ABS(1-Prev_1_D2/PLC_PRG.D2)<0.01 AND PLC_PRG.D2/D2_Stab>1.04 THEN UP_D2:=TRUE; D2_Stab:=PLC_PRG.D2; END_IF END_IF
+IF PLC_PRG.D2>0 AND D2_Stab<>0 THEN IF ABS(1-Prev_2_D2/PLC_PRG.D2)<0.01 AND ABS(1-Prev_1_D2/PLC_PRG.D2)<0.01 AND PLC_PRG.D2/D2_Stab<0.96 THEN DWN_D2 :=TRUE;  D2_Stab:=PLC_PRG.D2; END_IF END_IF
+    Prev_2_D2 := Prev_1_D2;
+    Prev_1_D2 := PLC_PRG.D2;
+
+	// Проверка роста давления после вентилятора
+IF D5_Stab=0 AND PLC_PRG.D5<>0 THEN D5_Stab:=PLC_PRG.D5; END_IF
+IF PLC_PRG.D5>0 AND D5_Stab<>0 THEN IF ABS(1-Prev_2_D5/PLC_PRG.D5)<0.005 AND ABS(1-Prev_1_D5/PLC_PRG.D5)<0.005 AND PLC_PRG.D5/D5_Stab>1.02 THEN UP_D5:=TRUE; D5_Stab:=PLC_PRG.D5; END_IF END_IF
+IF PLC_PRG.D5>0 AND D5_Stab<>0 THEN IF ABS(1-Prev_2_D5/PLC_PRG.D5)<0.005 AND ABS(1-Prev_1_D5/PLC_PRG.D5)<0.005 AND PLC_PRG.D5/D5_Stab<0.98 THEN DWN_D5 :=TRUE;  D5_Stab:=PLC_PRG.D5; END_IF END_IF
+    Prev_2_D5 := Prev_1_D5;
+    Prev_1_D5 := PLC_PRG.D5;
+
+	// Проверка роста разряжения после дымососа
+IF D6_Stab=0 AND PLC_PRG.D6<>0 THEN D6_Stab:=PLC_PRG.D6; END_IF
+IF PLC_PRG.D6>0 AND D6_Stab<>0 THEN IF ABS(1-Prev_2_D6/PLC_PRG.D6)<0.005 AND ABS(1-Prev_1_D6/PLC_PRG.D6)<0.005 AND PLC_PRG.D6/D6_Stab>1.02 THEN UP_D6:=TRUE; D6_Stab:=PLC_PRG.D6; END_IF END_IF
+IF PLC_PRG.D6>0 AND D6_Stab<>0 THEN IF ABS(1-Prev_2_D6/PLC_PRG.D6)<0.005 AND ABS(1-Prev_1_D6/PLC_PRG.D6)<0.005 AND PLC_PRG.D6/D6_Stab<0.98 THEN DWN_D6 :=TRUE;  D6_Stab:=PLC_PRG.D6; END_IF END_IF
+    Prev_2_D6 := Prev_1_D6;
+    Prev_1_D6 := PLC_PRG.D6;
+
+	// Проверка изменения загрузки питателя
+IF PIT_Stab=0 AND PLC_PRG.PIT>0 THEN PIT_Stab:=PLC_PRG.PIT; END_IF
+IF PLC_PRG.PIT>0 AND PIT_Stab>0 THEN IF ABS(1-Prev_2_PIT/PLC_PRG.PIT)<0.005 AND ABS(1-Prev_1_PIT/PLC_PRG.PIT)<0.005 AND PLC_PRG.PIT/PIT_Stab>1.02 THEN UP_PIT:=TRUE; PIT_Stab:=PLC_PRG.PIT; END_IF END_IF
+IF PLC_PRG.PIT>0 AND PIT_Stab>0 THEN IF ABS(1-Prev_2_PIT/PLC_PRG.PIT)<0.005 AND ABS(1-Prev_1_PIT/PLC_PRG.PIT)<0.005 AND PLC_PRG.PIT/PIT_Stab<0.98 THEN DWN_PIT :=TRUE;  PIT_Stab:=PLC_PRG.PIT; END_IF END_IF
+    Prev_2_PIT := Prev_1_PIT;
+    Prev_1_PIT := PLC_PRG.PIT;
+
+	// Проверка изменения расхода газа
+IF Q_gaz_Stab=0 AND PLC_PRG.Q_gaz>0 THEN Q_gaz_Stab:=PLC_PRG.Q_gaz; END_IF
+IF PLC_PRG.Q_gaz>0 AND Q_gaz_Stab>0 THEN IF ABS(1-Prev_2_Q_gaz/PLC_PRG.Q_gaz)<0.005 AND ABS(1-Prev_1_Q_gaz/PLC_PRG.Q_gaz)<0.005 AND PLC_PRG.Q_gaz/Q_gaz_Stab>1.02 THEN UP_Q_gaz:=TRUE; Q_gaz_Stab:=PLC_PRG.Q_gaz; END_IF END_IF
+IF PLC_PRG.Q_gaz>0 AND Q_gaz_Stab>0 THEN IF ABS(1-Prev_2_Q_gaz/PLC_PRG.Q_gaz)<0.005 AND ABS(1-Prev_1_Q_gaz/PLC_PRG.Q_gaz)<0.005 AND PLC_PRG.Q_gaz/Q_gaz_Stab<0.98 THEN DWN_Q_gaz :=TRUE;  Q_gaz_Stab:=PLC_PRG.Q_gaz; END_IF END_IF
+    Prev_2_Q_gaz := Prev_1_Q_gaz;
+    Prev_1_Q_gaz := PLC_PRG.Q_gaz;
+
+Timer(IN := FALSE);
+END_IF
+
+IF POU_V.D5>100 THEN Vent:=TRUE; ELSE VENT:=FALSE; END_IF //Вентилятор
+IF POU_V.D6<-100 THEN Dym:=TRUE; ELSE Dym:=FALSE; END_IF //Дымосос
+IF POU_V.PIT_1>0.01 THEN Pit:=TRUE; ELSE Pit:=FALSE; END_IF //Питатель
+IF POU_V.D2>20 OR PLC_PRG.Q_gaz>10 THEN Gor:=TRUE; ELSE Gor:=FALSE; END_IF //Горелка
+IF (Vent OR Dym) AND (Gor OR ON) THEN ON:=TRUE; ELSE ON:=FALSE; END_IF //Печь включена
+IF UP_T13 AND UP_T14 AND ON THEN TEMP_UP:=TRUE; ELSE TEMP_UP:=FALSE; END_IF //Печь разогревается
+IF DWN_T13 AND DWN_T14 AND ON THEN TEMP_DWN:=TRUE; ELSE TEMP_DWN:=FALSE; END_IF //Печь остывает
+
+IF Vent<>Vent_1 THEN Vent_1:=Vent; SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+IF Vent THEN Text_Hist[1]:="Вентилятор включен"; ELSE Text_Hist[1]:="Вентилятор выключен";END_IF
+ELSIF Dym<>Dym_1 THEN Dym_1:=Dym; SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+IF Dym THEN Text_Hist[1]:="Дымосос включен"; ELSE Text_Hist[1]:="Дымосос выключен"; END_IF
+ELSIF Pit<>Pit_1 THEN Pit_1:=Pit;SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+IF Pit THEN Text_Hist[1]:="Питатель включен"; ELSE Text_Hist[1]:="Питатель выключен"; END_IF
+ELSIF Gor<>Gor_1 THEN Gor_1:=Gor; SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+IF Gor THEN Text_Hist[1]:="Горелка включена"; ELSE Text_Hist[1]:="Горелка выключена"; END_IF
+ELSIF ON<>ON_1 THEN ON_1:=ON; SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+IF ON THEN Text_Hist[1]:="Печь включена"; ELSE Text_Hist[1]:="Печь выключена"; END_IF
+ELSIF TEMP_UP<>TEMP_UP_1 AND ON THEN TEMP_UP_1:=TEMP_UP; SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+IF TEMP_UP THEN Text_Hist[1]:="Температура в топке увеличивается"; ELSE Text_Hist[1]:="Температура в топке стабилизировалась";END_IF
+ELSIF TEMP_DWN<>TEMP_DWN_1 AND ON THEN TEMP_DWN_1:=TEMP_DWN; SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+IF TEMP_DWN THEN Text_Hist[1]:="Температура в топке уменьшается"; ELSE Text_Hist[1]:="Температура в топке стабилизировалась";END_IF
+END_IF
+
+
+IF UP_Q_gaz AND ON THEN SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+Text_Hist[1]:=WCONCAT (WCONCAT("Расход газа увеличен до ",REAL_TO_WSTRING(Q_gaz_Stab))," м³/ч"); UP_Q_gaz:=FALSE; 
+ELSIF DWN_Q_gaz AND ON THEN SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+Text_Hist[1]:=WCONCAT (WCONCAT("Расход газа снижен до ",REAL_TO_WSTRING(Q_gaz_Stab))," м³/ч"); DWN_Q_gaz:=FALSE;
+ELSIF UP_D2 AND ON AND GOR THEN SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+Text_Hist[1]:=WCONCAT (WCONCAT("Давление газа увеличено до ",REAL_TO_WSTRING(D2_Stab))," Па"); UP_D2:=FALSE; 
+ELSIF DWN_D2 AND ON AND GOR THEN SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+Text_Hist[1]:=WCONCAT (WCONCAT("Давление газа снижено до ",REAL_TO_WSTRING(D2_Stab))," Па"); DWN_D2:=FALSE;
+ELSIF UP_D5 AND ON AND VENT THEN SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+Text_Hist[1]:=WCONCAT (WCONCAT("Давление вентилятора увеличено до ",REAL_TO_WSTRING(D5_Stab))," Па"); UP_D5:=FALSE; 
+ELSIF DWN_D5 AND ON AND VENT THEN SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+Text_Hist[1]:=WCONCAT (WCONCAT("Давление вентилятора снижено до ",REAL_TO_WSTRING(D5_Stab))," Па"); DWN_D5:=FALSE;
+ELSIF UP_D6 AND ON THEN SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+Text_Hist[1]:=WCONCAT (WCONCAT("Разряжение дымососа увеличено до  ",REAL_TO_WSTRING(D6_Stab))," Па"); UP_D6:=FALSE; 
+ELSIF DWN_D6 AND ON THEN SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+Text_Hist[1]:=WCONCAT (WCONCAT("Разряжение дымососа снижено до ",REAL_TO_WSTRING(D6_Stab))," Па"); DWN_D6:=FALSE;
+ELSIF UP_PIT AND ON AND PIT THEN SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+Text_Hist[1]:=WCONCAT (WCONCAT("Загрузка питателя увеличена до ",REAL_TO_WSTRING(OSCAT_BASIC.ROUND (PIT_Stab,3)*100))," %"); UP_PIT:=FALSE; 
+ELSIF DWN_PIT AND ON AND PIT THEN SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+Text_Hist[1]:=WCONCAT (WCONCAT("Загрузка питателя снижена до ",REAL_TO_WSTRING(OSCAT_BASIC.ROUND (PIT_Stab,3)*100))," %"); DWN_PIT:=FALSE;
+END_IF
+
+IF PLC_PRG.No_Rud<>ZAG_OFF AND ON THEN ZAG_OFF:=PLC_PRG.No_Rud; SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+IF PLC_PRG.No_Rud THEN Text_Hist[1]:="Печь работает без загрузки"; ELSE Text_Hist[1]:="Загрузка печи возобновилась"; END_IF END_IF
+
+IF GOR<>GAZ_OFF AND ON THEN GAZ_OFF:=GOR; SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+IF  GAZ_OFF=FALSE THEN Text_Hist[1]:="Печь работает без подачи газа"; ELSE Text_Hist[1]:="Подача газа возобновилась"; END_IF END_IF
+
+IF VL_DIF<>PLC_PRG.B_VL AND ON AND VL_m THEN Time_VL:=TIME(); VL_m:=FALSE; DT_VL:=TargetVars.stRtc.dtDateAndTime;
+ELSIF VL_DIF=PLC_PRG.B_VL AND ON AND VL_m=FALSE THEN VL_m:=TRUE; 
+ELSIF TIME_TO_REAL (TIME())-TIME_TO_REAL(Time_VL)>180000 AND ON AND VL_m=FALSE THEN VL_DIF:=PLC_PRG.B_VL; VL_m:=TRUE;
+SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=DT_VL; m_dif:=TRUE;
+IF PLC_PRG.B_VL THEN Text_Hist[1]:=WCONCAT (WCONCAT("Влажность руды на выходе ",REAL_TO_WSTRING (OSCAT_BASIC.ROUND (POU_V.Vl_rud_out,1))),"% не в границах уставки"); 
+ELSE Text_Hist[1]:="Влажность руды на выходе в пределах уставки"; END_IF END_IF
+
+IF GOR AND PGaz_DIF<>PLC_PRG.B_D2 AND ON AND GAZ_m THEN Time_GAZ:=TIME(); GAZ_m:=FALSE; DT_GAZ:=TargetVars.stRtc.dtDateAndTime;
+ELSIF PGaz_DIF=PLC_PRG.B_D2 AND ON AND GAZ_m=FALSE THEN GAZ_m:=TRUE; 
+ELSIF TIME_TO_REAL (TIME())-TIME_TO_REAL(Time_GAZ)>180000 AND ON AND GAZ_m=FALSE THEN PGaz_DIF:=PLC_PRG.B_D2; GAZ_m:=TRUE;
+SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=DT_GAZ; m_dif:=TRUE;
+IF PLC_PRG.B_D2 THEN Text_Hist[1]:=WCONCAT (WCONCAT("Давление газа ",REAL_TO_WSTRING(PLC_PRG.D2)),"Па не в границах уставки"); 
+ELSE Text_Hist[1]:="Давление газа в пределах уставки"; END_IF END_IF
+
+IF GOR AND PTop_DIF<>PLC_PRG.B_D9 AND ON AND PTop_m THEN Time_PTop:=TIME(); PTop_m:=FALSE; DT_PTop:=TargetVars.stRtc.dtDateAndTime;
+ELSIF PTop_DIF=PLC_PRG.B_D9 AND ON AND PTop_m=FALSE THEN PTop_m:=TRUE; 
+ELSIF TIME_TO_REAL (TIME())-TIME_TO_REAL(Time_PTop)>180000 AND ON AND PTop_m=FALSE THEN PTop_DIF:=PLC_PRG.B_D9; PTop_m:=TRUE;
+SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=DT_PTop; m_dif:=TRUE;
+IF PLC_PRG.B_D9 THEN Text_Hist[1]:=WCONCAT (WCONCAT("Разряжение в топке ",REAL_TO_WSTRING(PLC_PRG.D9)),"Па не в границах уставки"); 
+ELSE Text_Hist[1]:="Давление газа в пределах уставки"; END_IF END_IF
+
+IF TTop_DIF<>PLC_PRG.B_T13 AND ON AND TTop_m THEN Time_TTop:=TIME(); TTop_m:=FALSE; DT_TTop:=TargetVars.stRtc.dtDateAndTime;
+ELSIF TTop_DIF=PLC_PRG.B_T13 AND ON AND TTop_m=FALSE THEN TTop_m:=TRUE; 
+ELSIF TIME_TO_REAL (TIME())-TIME_TO_REAL(Time_TTop)>180000 AND ON AND TTop_m=FALSE THEN TTop_DIF:=PLC_PRG.B_T13; TTop_m:=TRUE;
+SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=DT_TTop; m_dif:=TRUE;
+IF PLC_PRG.B_T13 THEN Text_Hist[1]:=WCONCAT (WCONCAT("Температура в топке ",REAL_TO_WSTRING(PLC_PRG.T13)),"°C не в границах уставки"); 
+ELSE Text_Hist[1]:="Температура в топке в пределах уставки"; END_IF END_IF
+
+IF VENT AND PVent_DIF<>PLC_PRG.B_D3 AND ON AND PVent_m THEN Time_PVent:=TIME(); PVent_m:=FALSE; DT_PVent:=TargetVars.stRtc.dtDateAndTime;
+ELSIF PVent_DIF=PLC_PRG.B_D3 AND ON AND PVent_m=FALSE THEN PVent_m:=TRUE; 
+ELSIF TIME_TO_REAL (TIME())-TIME_TO_REAL(Time_PVent)>180000 AND ON AND PVent_m=FALSE THEN PVent_DIF:=PLC_PRG.B_D3; PVent_m:=TRUE;
+SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=DT_PVent; m_dif:=TRUE;
+IF PLC_PRG.B_D3 THEN Text_Hist[1]:=WCONCAT (WCONCAT("Давление воздуха ",REAL_TO_WSTRING(PLC_PRG.D3)),"Па не в границах уставки"); 
+ELSE Text_Hist[1]:="Давление воздуха в пределах уставки"; END_IF END_IF
+
+IF DYM AND PDym_DIF<>PLC_PRG.B_D6 AND ON AND PDym_m THEN Time_PDym:=TIME(); PDym_m:=FALSE; DT_PDym:=TargetVars.stRtc.dtDateAndTime;
+ELSIF PDym_DIF=PLC_PRG.B_D6 AND ON AND PDym_m=FALSE THEN PDym_m:=TRUE; 
+ELSIF TIME_TO_REAL (TIME())-TIME_TO_REAL(Time_PDym)>180000 AND ON AND PDym_m=FALSE THEN PDym_DIF:=PLC_PRG.B_D6; PDym_m:=TRUE;
+SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=DT_PDym; m_dif:=TRUE;
+IF PLC_PRG.B_D6 THEN Text_Hist[1]:=WCONCAT (WCONCAT("Разряжение дымососа ",REAL_TO_WSTRING(PLC_PRG.D6)),"Па не в границах уставки"); 
+ELSE Text_Hist[1]:="Разряжение дымососа в пределах уставки"; END_IF END_IF
+
+IF PIT AND Pit_DIF<>PLC_PRG.B_PIT AND ON AND Pit_m THEN Time_Pit:=TIME(); Pit_m:=FALSE; DT_Pit:=TargetVars.stRtc.dtDateAndTime;
+ELSIF Pit_DIF=PLC_PRG.B_PIT AND ON AND Pit_m=FALSE THEN Pit_m:=TRUE; 
+ELSIF TIME_TO_REAL (TIME())-TIME_TO_REAL(Time_Pit)>180000 AND ON AND Pit_m=FALSE THEN Pit_DIF:=PLC_PRG.B_PIT; Pit_m:=TRUE;
+SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=DT_Pit; m_dif:=TRUE;
+IF PLC_PRG.B_PIT THEN Text_Hist[1]:=WCONCAT (WCONCAT("Загрузка питателя ",REAL_TO_WSTRING (OSCAT_BASIC.ROUND (PLC_PRG.PIT*100,1)))," % не в границах уставки"); 
+ELSE Text_Hist[1]:="Загрузка питателя в пределах уставки"; END_IF END_IF
+
+IF POU_V.Auto<>AUTO AND ON THEN AUTO:=POU_V.Auto;SysMem.SysMemMove (pDest:= ADR(Text_Hist[2]), pSrc:= ADR(Text_Hist[1]), udiCount:= SIZEOF(Text_Hist[1])*999); SysMem.SysMemMove(pDest:= ADR(Time_Hist[2]), pSrc:= ADR(Time_Hist[1]), udiCount:= SIZEOF(Time_Hist[1])*999);
+Time_Hist[1]:=TargetVars.stRtc.dtDateAndTime; m_dif:=TRUE;
+IF POU_V.Auto THEN Text_Hist[1]:="Автокоррекция влажности на выходе начата"; ELSE Text_Hist[1]:="Автокоррекция влажности на выходе закончена"; END_IF END_IF
+
+IF  m_dif=TRUE THEN m:=0; FOR i:=1 TO 999 DO IF Time_Hist[1000-i]>DT#1970-1-1-0:0:0 THEN m:=m+1; END_IF END_FOR  m_dif:=FALSE; END_IF
+
+IF ON AND TEMP_UP=FALSE AND TEMP_DWN=FALSE AND UP_Q_gaz=FALSE AND DWN_Q_gaz=FALSE AND VENT_UP=FALSE AND VENT_DWN=FALSE AND DYM_UP=FALSE AND DYM_DWN=FALSE AND PIT_UP=FALSE AND PIT_DWN=FALSE AND ZAG_OFF=FALSE THEN 
+Timer_Stab (IN := TRUE, PT:= T#300S); ELSE Timer_Stab(IN := FALSE); END_IF
+IF Timer_Stab.Q THEN Stab:=TRUE; ELSE Stab:=FALSE; END_IF
+

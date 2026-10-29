@@ -1,0 +1,25 @@
+PROGRAM PRG_CountClients
+VAR
+	pClient: POINTER TO VisuElems.VisuElemBase.VisuStructClientData; // Указатель на данные клиента
+    iWebVisuCount: INT; // Переменная для хранения количества Web-клиентов
+	Client: REAL;
+END_VAR
+
+// Сброс счетчика перед каждым циклом опроса
+iWebVisuCount := 0;
+
+// Инициализация и запуск итератора по всем активным клиентам
+VisuElems.g_ClientManager.BeginIteration();
+pClient := VisuElems.g_ClientManager.GetNextClient();
+
+WHILE pClient <> 0 DO
+    // Проверяем, является ли тип подключения именно Web-визуализацией
+    IF pClient^.GlobalData.ClientType = VisuElems.VisuElemBase.Visu_ClientType.WebVisualization THEN
+        iWebVisuCount := iWebVisuCount + 1;
+    END_IF
+    
+    // Переходим к следующему клиенту
+    pClient := VisuElems.g_ClientManager.GetNextClient();
+END_WHILE
+
+Client:= int_to_real(iWebVisuCount); 

@@ -1,0 +1,137 @@
+PROGRAM FILTR
+VAR
+//Экземпляры фильтров
+	MyFilter_T1      :FB_Filter; // Наш фильтр
+	MyFilter_T3      :FB_Filter; // Наш фильтр
+	MyFilter_T4      :FB_Filter; // Наш фильтр
+	MyFilter_T5      :FB_Filter; // Наш фильтр
+	MyFilter_T6      :FB_Filter; // Наш фильтр
+	MyFilter_T7      :FB_Filter; // Наш фильтр
+	MyFilter_T8      :FB_Filter; // Наш фильтр
+	MyFilter_T9      :FB_Filter; // Наш фильтр
+	MyFilter_T11     :FB_Filter; // Наш фильтр
+	MyFilter_T12     :FB_Filter; // Наш фильтр
+	MyFilter_T13     :FB_Filter; // Наш фильтр
+	MyFilter_T14     :FB_Filter; // Наш фильтр
+	MyFilter_T15     :FB_Filter; // Наш фильтр
+	MyFilter_T16     :FB_Filter; // Наш фильтр
+	MyFilter_D1      :FB_Filter; // Наш фильтр
+	MyFilter_D2      :FB_Filter; // Наш фильтр
+	MyFilter_D3      :FB_Filter; // Наш фильтр
+	MyFilter_D4      :FB_Filter; // Наш фильтр
+	MyFilter_D5      :FB_Filter; // Наш фильтр
+	MyFilter_D6      :FB_Filter; // Наш фильтр
+	MyFilter_D8      :FB_Filter; // Наш фильтр
+	MyFilter_D9      :FB_Filter; // Наш фильтр
+	MyFilter_D10     :FB_Filter; // Наш фильтр
+	MyFilter_VL_air  :FB_Filter; // Наш фильтр
+	MyFilter_PIT     :FB_Filter; // Наш фильтр
+	
+//данные с датчиков
+	PT1:REAL;	 (*Температура Байпас1*)
+	PT3:REAL;	 (*Температура до циклона 1*)
+	PT4:REAL;	 (*Температура до циклона 2*)
+	PT5:REAL;	 (*Температура шахта +12*)
+	PT6:REAL;	 (*Температура шахта +16*)
+	PT7:REAL;	 (*Температура шахта +21*)
+	PT8:REAL;	 (*Температура шахта +9*)
+	PT9:REAL;	 (*Температура после циклона*)
+	PT11:REAL;	 (*Температура после вентилятора*)
+	PT12:REAL;	 (*Температура перед дымососом*)
+	PT13:REAL;	 (*Температура в топке ТХА*)
+	PT14:REAL;	 (*Температура перед шахтой ТХА*)
+	PT15:REAL;	 (*Температура +21 ТХА*)
+	PT16:REAL;	 (*Температура воздуха в цехе*)
+	PD1:REAL; 	 (*Разряжение в топке*)
+	PD2:REAL; 	 (*Давление газа на горелку*)
+	PD3:REAL; 	 (*Давление воздуха в коллекторе перед горелкой (аг)*)
+	PD4:REAL; 	 (*Давление на разбавление*)
+	PD5:REAL; 	 (*Давление после вентилятора*)
+	PD6:REAL; 	 (*Разряжение после дымососа*)
+	PD8:REAL; 	 (*Разряжение после циклона*)
+	PD9:REAL; 	 (*Разряжение в топке (аг)*)
+	PD10:REAL;	 (*Давление воздуха перед горелкой (аг)*)
+	PVL_air:REAL;(*% загрузки питателя*)
+	PPIT:REAL;	 (*% загрузки питателя*)
+
+//данные в программу	
+	T1_F:REAL;	  (*Температура Байпас1*)                              
+	T3_F:REAL;    (*Температура до циклона 1*)                         
+	T4_F:REAL;    (*Температура до циклона 2*)                         
+	T5_F:REAL;    (*Температура шахта +12*)                            
+	T6_F:REAL;    (*Температура шахта +16*)                            
+	T7_F:REAL;    (*Температура шахта +21*)                            
+	T8_F:REAL;    (*Температура шахта +9*)                             
+	T9_F:REAL;    (*Температура после циклона*)                        
+	T11_F:REAL;   (*Температура после вентилятора*)                    
+	T12_F:REAL;   (*Температура перед дымососом*)                      
+	T13_F:REAL;   (*Температура в топке ТХА*)                          
+	T14_F:REAL;   (*Температура перед шахтой ТХА*)                     
+	T15_F:REAL;   (*Температура +21 ТХА*)                              
+	T16_F:REAL;	  (*Температура воздуха в цехе*)
+	D1_F:REAL;    (*Разряжение в топке*)                               
+	D2_F:REAL;    (*Давление газа на горелку*)                         
+	D3_F:REAL;    (*Давление воздуха в коллекторе перед горелкой (аг)*)
+	D4_F:REAL;    (*Давление на разбавление*)                          
+	D5_F:REAL;    (*Давление после вентилятора*)                       
+	D6_F:REAL;    (*Разряжение после дымососа*)                        
+	D8_F:REAL;    (*Разряжение после циклона*)                         
+	D9_F:REAL;    (*Разряжение в топке (аг)*)                          
+	D10_F:REAL;   (*Давление воздуха перед горелкой (аг)*)             
+	VL_air_F:REAL;(*% влажность воздуха в цехе*)
+	PIT_F:REAL;   (*% загрузки питателя*)                              
+
+	T1_F1:REAL;	  (*Температура Байпас1*)                              
+	T3_F1:REAL;    (*Температура до циклона 1*)                         
+	T4_F1:REAL;    (*Температура до циклона 2*)                         
+	T5_F1:REAL;    (*Температура шахта +12*)                            
+	T6_F1:REAL;    (*Температура шахта +16*)                            
+	T7_F1:REAL;    (*Температура шахта +21*)                            
+	T8_F1:REAL;    (*Температура шахта +9*)                             
+	T9_F1:REAL;    (*Температура после циклона*)                        
+	T11_F1:REAL;   (*Температура после вентилятора*)                    
+	T12_F1:REAL;   (*Температура перед дымососом*)                      
+	T13_F1:REAL;   (*Температура в топке ТХА*)                          
+	T14_F1:REAL;   (*Температура перед шахтой ТХА*)                     
+	T15_F1:REAL;   (*Температура +21 ТХА*)                              
+	T16_F1:REAL;	  (*Температура воздуха в цехе*)
+	D1_F1:REAL;    (*Разряжение в топке*)                               
+	D2_F1:REAL;    (*Давление газа на горелку*)                         
+	D3_F1:REAL;    (*Давление воздуха в коллекторе перед горелкой (аг)*)
+	D4_F1:REAL;    (*Давление на разбавление*)                          
+	D5_F1:REAL;    (*Давление после вентилятора*)                       
+	D6_F1:REAL;    (*Разряжение после дымососа*)                        
+	D8_F1:REAL;    (*Разряжение после циклона*)                         
+	D9_F1:REAL;    (*Разряжение в топке (аг)*)                          
+	D10_F1:REAL;   (*Давление воздуха перед горелкой (аг)*)             
+	VL_air_F1:REAL;(*% влажность воздуха в цехе*)
+	PIT_F1:REAL;   (*% загрузки питателя*)                              
+END_VAR
+
+MyFilter_T1     (rInput := PT1,     Minimal:=-50, Maximal:=700,   rOutput => T1_F1);         T1_F:= T1_F1;
+MyFilter_T3     (rInput := PT3,     Minimal:=-50, Maximal:=700,   rOutput => T3_F1);         T3_F:= T3_F1;
+MyFilter_T4     (rInput := PT4,     Minimal:=-50, Maximal:=700,   rOutput => T4_F1);         T4_F:= T4_F1;
+MyFilter_T5     (rInput := PT5,     Minimal:=-50, Maximal:=700,   rOutput => T5_F1);         T5_F:= T5_F1;
+MyFilter_T6     (rInput := PT6,     Minimal:=-50, Maximal:=700,   rOutput => T6_F1);         T6_F:= T6_F1;
+MyFilter_T7     (rInput := PT7,     Minimal:=-50, Maximal:=700,   rOutput => T7_F1);         T7_F:= T7_F1;
+MyFilter_T8     (rInput := PT8,     Minimal:=-50, Maximal:=700,   rOutput => T8_F1);         T8_F:= T8_F1;
+MyFilter_T9     (rInput := PT9,     Minimal:=-50, Maximal:=700,   rOutput => T9_F1);         T9_F:= T9_F1;
+MyFilter_T11    (rInput := PT11,    Minimal:=-50, Maximal:=700,   rOutput => T11_F1);       T11_F:= T11_F1;
+MyFilter_T12    (rInput := PT12,    Minimal:=-50, Maximal:=700,   rOutput => T12_F1);       T12_F:= T12_F1;
+MyFilter_T13    (rInput := PT13,    Minimal:=-50, Maximal:=700,   rOutput => T13_F1);       T13_F:= T13_F1;
+MyFilter_T14    (rInput := PT14,    Minimal:=-50, Maximal:=700,   rOutput => T14_F1);       T14_F:= T14_F1;
+MyFilter_T15    (rInput := PT15,    Minimal:=-50, Maximal:=700,   rOutput => T15_F1);       T15_F:= T15_F1;
+MyFilter_T16    (rInput := PT16,    Minimal:=-50, Maximal:=700,   rOutput => T16_F1);       T16_F:= T16_F1;
+MyFilter_D1     (rInput := PD1,     Minimal:=-50, Maximal:=10000, rOutput => D1_F1);         D1_F:= D1_F1-5000;  
+MyFilter_D2     (rInput := PD2,     Minimal:=-50, Maximal:=10000, rOutput => D2_F1);         D2_F:= D2_F1; 
+MyFilter_D3     (rInput := PD3,     Minimal:=-50, Maximal:=10000, rOutput => D3_F1);         D3_F:= D3_F1; 
+MyFilter_D4     (rInput := PD4,     Minimal:=-50, Maximal:=10000, rOutput => D4_F1);         D4_F:= D4_F1-5000; 
+MyFilter_D5     (rInput := PD5,     Minimal:=-50, Maximal:=10000, rOutput => D5_F1);         D5_F:= D5_F1-5000; 
+MyFilter_D6     (rInput := PD6,     Minimal:=-50, Maximal:=10000, rOutput => D6_F1);         D6_F:= D6_F1-5000; 
+MyFilter_D8     (rInput := PD8,     Minimal:=-50, Maximal:=10000, rOutput => D8_F1);         D8_F:= D8_F1-5000; 
+MyFilter_D9     (rInput := PD9,     Minimal:=-50, Maximal:=10000, rOutput => D9_F1);         D9_F:= -D9_F1; 
+MyFilter_D10    (rInput := PD10,    Minimal:=-50, Maximal:=10000, rOutput => D10_F1);       D10_F:= D10_F1; 
+MyFilter_VL_air (rInput := PVL_air, Minimal:=-50, Maximal:=10000, rOutput => VL_air_F1); VL_air_F:= VL_air_F1; 
+MyFilter_PIT    (rInput := PPIT,    Minimal:=-50, Maximal:=10000, rOutput => PIT_F1);       PIT_F:= (PIT_F1-50)*2-0.3;    
+
+
